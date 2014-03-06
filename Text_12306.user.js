@@ -68,7 +68,7 @@ withjQuery(function($, window) {
 		});
 		var Block = true;
 		$('#query_ticket').bind('click', function(event) {
-			$("#queryLeftTable").ajaxComplete(function() {
+			setTimeout(function() {
 				$("#queryLeftTable tr").each(function(index, e) {
 					if (checkTickets(e)) {
 						$(this).removeClass('bgc');
@@ -82,7 +82,7 @@ withjQuery(function($, window) {
 						$(this).css("background-color", "#FFF7A8");
 					}
 				});
-			})
+			}, 200);
 		});
 
 		var queryTimes = 0;
@@ -160,11 +160,12 @@ withjQuery(function($, window) {
 					document.getElementById("refreshTimes").innerHTML = queryTimes++;
 					self.innerHTML = "停止刷票";
 					if (isAutoQueryEnabled) {
-						$("#dc").click();
-						$("#sf1").click();
-						$("#query_ticket").click();
+						$("#query_ticket").get(0).click();
 					}
 				}, 2000);
+			} else {
+				self.innerHTML = "开始刷票";
+				clearInterval(timer);
 			}
 		})).append($("<span>").html("&nbsp;&nbsp;尝试次数：").append($("<span/>").attr("id", "refreshTimes").text("0"))).append(
 		//Custom ticket type
