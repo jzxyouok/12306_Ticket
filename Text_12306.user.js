@@ -146,20 +146,24 @@ withjQuery(function($, window) {
 		var ui = $("<div>请先选择好出发地，目的地，和出发时间。&nbsp;&nbsp;&nbsp;</div>").append($("<input id='isStudentTicket' type='checkbox' />").change(function() {
 			isStudentTicket = this.checked;
 		})).append($("<label for='isStudentTicket'></label>").html("学生票&nbsp;&nbsp;")).append($("<button style='padding: 5px 10px; background: #2CC03E;border-color: #259A33;border-right-color: #2CC03E;border-bottom-color:#2CC03E;color: white;border-radius: 5px;text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.2);'/>").attr("id", "refreshButton").html("开始刷票").click(function() {
-
+			var self = this;
 			if (!isAutoQueryEnabled) {
 				isTicketAvailable = false;
 				isAutoQueryEnabled = true;
 				timer = setInterval(function() {
+					if (!isAutoQueryEnabled) {
+						self.innerHTML = "开始刷票";
+						clearInterval(timer);
+						return;
+					}
 					document.getElementById("refreshTimes").innerHTML = queryTimes++;
-					// if (isAutoQueryEnabled)
-					// $("#query_ticket").click();
+					self.innerHTML = "停止刷票";
+					if (isAutoQueryEnabled) {
+						$("#dc").click();
+						$("#sf1").click();
+						$("#query_ticket").click();
+					}
 				}, 2000);
-				this.innerHTML = "停止刷票";
-			} else {
-				isAutoQueryEnabled = false;
-				clearInterval(timer);
-				this.innerHTML = "开始刷票";
 			}
 		})).append($("<span>").html("&nbsp;&nbsp;尝试次数：").append($("<span/>").attr("id", "refreshTimes").text("0"))).append(
 		//Custom ticket type
@@ -197,8 +201,8 @@ withjQuery(function($, window) {
 				return;
 			}
 		}
-		$("#username").val('401334029@qq.com');
-		$("#password").val('sks_168168');
+		$("#username").val('*****@qq.com');
+		$("#password").val('*****');
 
 		var count = 1;
 		//初始化
