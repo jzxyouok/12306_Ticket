@@ -68,20 +68,21 @@ withjQuery(function($, window) {
 		});
 		var Block = true;
 		$('#query_ticket').bind('click', function(event) {
-			alert('开始');
-			$("#queryLeftTable tr").each(function(index, e) {
-				if (checkTickets(e)) {
-					$(this).removeClass('bgc');
-					isTicketAvailable = true;
-					if (Block && isTicketAvailable) {
-						isAutoQueryEnabled = false;
-						Block = false;
-						notify('抢到票了', 3000, true);
-						OKMusic();
+			$("#queryLeftTable").ajaxComplete(function() {
+				$("#queryLeftTable tr").each(function(index, e) {
+					if (checkTickets(e)) {
+						$(this).removeClass('bgc');
+						isTicketAvailable = true;
+						if (Block && isTicketAvailable) {
+							isAutoQueryEnabled = false;
+							Block = false;
+							notify('抢到票了', 3000, true);
+							OKMusic();
+						}
+						$(this).css("background-color", "#FFF7A8");
 					}
-					$(this).css("background-color", "#FFF7A8");
-				}
-			});
+				});
+			})
 		});
 
 		var queryTimes = 0;
