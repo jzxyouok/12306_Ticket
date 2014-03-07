@@ -74,7 +74,6 @@ withjQuery(function($, window) {
 						$(this).removeClass('bgc');
 						isTicketAvailable = true;
 						if (Block && isTicketAvailable) {
-							isAutoQueryEnabled = false;
 							Block = false;
 							notify('抢到票了', 3000, true);
 							OKMusic();
@@ -89,8 +88,7 @@ withjQuery(function($, window) {
 
 		function notify(str, timeout, skipAlert) {// Webkit 桌面通知
 			if (window.webkitNotifications && window.webkitNotifications.checkPermission() == 0) {
-				var notification = webkitNotifications.createNotification("http://www.12306.cn/mormhweb/images/favicon.ico", // icon url - can be relative
-				'抢票消息', str);
+				var notification = webkitNotifications.createNotification("http://www.12306.cn/mormhweb/images/favicon.ico", '抢票消息', str);
 				notification.show();
 				if (timeout) {
 					setTimeout(function() {
@@ -122,25 +120,27 @@ withjQuery(function($, window) {
 		var $special = $("<input type='text' />")// 显示出发车次
 
 		function checkTickets(row) {
+			var v1 = $special.val();
+			if (v1 != '') {
+				var v2 = $.trim($(row).find(".train a").text());
+				if (v1.indexOf(v2) == -1)
+					return false;
+				if ($(row).find(".no-br a").length == 0) {
+					return false;
+				}
+			}
+			var cnt = 0;
 			$(row).find("td").each(function(i, e) {
 				if (i > 0 && i < 12 && ticketType[i + 3]) {
 					var info = $.trim($(e).text());
-					if (info != "--" && info != "无")
+					if (info != "--" && info != "无") {
 						$(this).css("background-color", "#2CC03E");
+						cnt++;
+					}
 				}
 			});
-			var v1 = $special.val();
-			if (v1 == '') {
-				//alert($(row).find(".train a").text() + $(row).find(".no-br a").length );
-				return $(row).find(".no-br a").length;
-			}
-			var v2 = $.trim($(row).find(".train a").text());
-			if (v2 == '' || v1.indexOf(v2) == -1)
-				return false;
-			if ($(row).find(".no-br a").length == 0) {
-				return false;
-			}
-			return true;
+
+			return cnt;
 		}
 
 		var timer = null;
@@ -152,18 +152,23 @@ withjQuery(function($, window) {
 				isTicketAvailable = false;
 				isAutoQueryEnabled = true;
 				timer = setInterval(function() {
-					if (!isAutoQueryEnabled) {
+					if (isTicketAvailable) {
 						self.innerHTML = "开始刷票";
+						isAutoQueryEnabled = false;
 						clearInterval(timer);
 						return;
 					}
 					document.getElementById("refreshTimes").innerHTML = queryTimes++;
 					self.innerHTML = "停止刷票";
 					if (isAutoQueryEnabled) {
+						if (isStudentTicket)
+							$("#sf2").click();
 						$("#query_ticket").get(0).click();
 					}
 				}, 2000);
 			} else {
+				isAutoQueryEnabled = false;
+				isTicketAvailable = false;
 				self.innerHTML = "开始刷票";
 				clearInterval(timer);
 			}
