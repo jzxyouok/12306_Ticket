@@ -68,6 +68,7 @@ withjQuery(function($, window) {
 		});
 		var Block = true;
 		$('#query_ticket').bind('click', function(event) {
+			Block = true;
 			setTimeout(function() {
 				$("#queryLeftTable tr").each(function(index, e) {
 					if (checkTickets(e)) {
@@ -81,10 +82,10 @@ withjQuery(function($, window) {
 						$(this).css("background-color", "#FFF7A8");
 					}
 				});
-			}, 200);
+			}, 1000);
 		});
 
-		var queryTimes = 0;
+		var queryTimes = 1;
 
 		function notify(str, timeout, skipAlert) {// Webkit 桌面通知
 			if (window.webkitNotifications && window.webkitNotifications.checkPermission() == 0) {
@@ -117,7 +118,7 @@ withjQuery(function($, window) {
 			}
 		}
 
-		var $special = $("<input type='text' />")// 显示出发车次
+		var $special = $("<input type='text' />");
 
 		function checkTickets(row) {
 			var v1 = $special.val();
@@ -139,7 +140,19 @@ withjQuery(function($, window) {
 					}
 				}
 			});
-
+			if (cnt && Block) {
+				$(row).find(".no-br a").click();
+				setTimeout(function() {
+					var $t;
+					if ( $t = $(".dhtmlx_wins_body_outer")) {
+						setTimeout(function() {
+							$t = $t.find('#loginForm');
+							alert($t.find("input").eq(0).attr('name'));
+							$t.find("input").eq(1).val('*****');
+						}, 200);
+					}
+				}, 100);
+			}
 			return cnt;
 		}
 
