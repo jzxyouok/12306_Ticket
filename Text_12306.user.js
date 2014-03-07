@@ -44,6 +44,9 @@ withjQuery(function($, window) {
 		};
 	}
 
+	var SubmitToken = "";
+	var leftTicketStr = "";
+
 	route("leftTicket/init", QueryTicket);
 
 	// 查询是否有票
@@ -82,7 +85,7 @@ withjQuery(function($, window) {
 						$(this).css("background-color", "#FFF7A8");
 					}
 				});
-			}, 1000);
+			}, 500);
 		});
 
 		var queryTimes = 1;
@@ -142,14 +145,33 @@ withjQuery(function($, window) {
 			});
 			if (cnt && Block) {
 				$(row).find(".no-br a").click();
+				$.post("https://kyfw.12306.cn/otn/confirmPassenger/initDc", {
+					"_json_att" : ""
+				}, function(data) {
+					console.log(data);
+					var str = $.trim(data.match(/globalRepeatSubmitToken.+/));
+					str = str.substr(str.indexOf("= ")).match(/[a-zA-Z0-9]+/);
+					if (str != "")
+						SubmitToken = str;
+				});
 				setTimeout(function() {
-					var $t;
-					if ( $t = $(".dhtmlx_wins_body_outer")) {
+					var $t = $("#defaultwarningAlert_id");
+					if ($t.length) {
+						$t.remove();
+						return false;
+					}
+					$t = $(".dhtmlx_wins_body_outer");
+					if ($t.length) {
 						setTimeout(function() {
 							$t = $t.find('#loginForm');
-							alert($t.find("input").eq(0).attr('name'));
-							$t.find("input").eq(1).val('*****');
-						}, 200);
+							$t.find("input").eq(0).val('401334029@qq.com');
+							$t.find("input").eq(1).val('sks_168168');
+							$('#randCode').keyup(function(e) {
+								var str = $.trim(e.target.value);
+								if (str.length == 4)
+									$t.find("#loginSubAsyn").get(0).click();
+							});
+						}, 1000);
 					}
 				}, 100);
 			}
@@ -262,8 +284,6 @@ withjQuery(function($, window) {
 				},
 				timeout : 30000,
 				success : function(msg) {
-					// for( var key in msg)
-					// alert(msg[key]);
 					if (msg['data'].loginCheck != 'Y') {
 						alert('请输入正确登录信息');
 						reLogin();
@@ -279,149 +299,161 @@ withjQuery(function($, window) {
 		}
 
 	});
-	route('confirmPassenger/initDc', submit);
-	function submit() {
-		if (!$("input.check:checked").length) {
-			$("input.check:first").click();
-		}
 
-		var userInfoUrl = "https://kyfw.12306.cn/otn/queryOrder/initNoComplete";
-
-		var count = 1, freq = 1000, doing = false, timer, $msg = $("<div style='padding-left:470px;'></div>");
-
-		function submitForm() {
-			timer = null;
-			//更改提交列车日期参数
-			//var wantDate = $("#startdatepicker").val();
-			//$("#start_date").val(wantDate);
-			//$("#_train_date_str").val(wantDate);
-
-			jQuery.ajax({
-				url : "https://kyfw.12306.cn/otn/confirmPassenger/initDc",
-				data : {
-					'cancel_flag' : '2',
-					'bed_level_order_num' : '000000000000000000000000000000',
-					'tour_flag' : ticketInfoForPassengerForm.tour_flag,
-					'randCode' : $("#randCode").val()
-				},
-				beforeSend : function(xhr) {
-					try {
-						xhr.setRequestHeader('X-Requested-With', {
-							toString : function() {
-								return '';
-							}
-						});
-						xhr.setRequestHeader('Cache-Control', 'max-age=0');
-						xhr.setRequestHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
-					} catch(e) {
-					};
-				},
-				type : "POST",
-				timeout : 30000,
-				success : function(msg) {
-					//Refresh token
-					var match = msg && msg.match(/org\.apache\.struts\.taglib\.html\.TOKEN['"]?\s*value=['"]?([^'">]+)/i);
-					var newToken = match && match[1];
-					if (newToken) {
-						$("input[name='org.apache.struts.taglib.html.TOKEN']").val(newToken);
-					}
-
-					if (msg.indexOf('payButton') > -1) {
-						//Success!
-						var audio;
-						if (window.Audio) {
-							audio = new Audio("http://www.w3school.com.cn/i/song.ogg");
-							audio.loop = true;
-							audio.play();
-						}
-						notify("恭喜，车票预订成！", null, true);
-						setTimeout(function() {
-							if (confirm("车票预订成，去付款？")) {
-								window.location.replace(userInfoUrl);
-							} else {
-								if (audio && !audio.paused)
-									audio.pause();
-							}
-						}, 100);
-						return;
-					} else if (msg.indexOf('未处理的订单') > -1) {
-						notify("有未处理的订单!");
-						window.location.replace(userInfoUrl);
-						return;
-					}
-					var reTryMessage = ['用户过多', '确认客票的状态后再尝试后续操作', '请不要重复提交', '没有足够的票!', '车次不开行'];
-					for (var i = reTryMessage.length - 1; i >= 0; i--) {
-						if (msg.indexOf(reTryMessage[i]) > -1) {
-							reSubmitForm(reTryMessage[i]);
+	route('confirmPassenger/initDc', function() {
+		setTimeout(function() {
+			if (!$("input.check:checked").length) {
+				$("input.check:first").click();
+			}
+			$.post("https://kyfw.12306.cn/otn/confirmPassenger/initDc", {
+				"_json_att" : ""
+			}, function(data) {
+				var str = $.trim(data.match(/globalRepeatSubmitToken.+/));
+				str = str.substr(str.indexOf("= ")).match(/[a-zA-Z0-9]+/);
+				if (str != "")
+					SubmitToken = str;
+			});
+			$("#randCode").off('keyup');
+			$("#randCode").focus().keyup(function(e) {
+				var str = $.trim(e.target.value);
+				if (str.length == 4) {
+					$.post("https://kyfw.12306.cn/otn/passcodeNew/checkRandCodeAnsyn", {
+						"randCode" : $("#randCode").val(),
+						"rand" : "randp"
+					}, function(data) {
+						if (data.data == "N") {
+							$(".i-re").click();
+						} else {
+							submitForm();
 							return;
 						}
-					};
-					//Parse error message
-					msg = msg.match(/var\s+message\s*=\s*"([^"]*)/);
-					stop(msg && msg[1] || '出错了。。。。 啥错？ 我也不知道。。。。。');
-				},
-				error : function(msg) {
-					reSubmitForm("网络错误");
+					});
 				}
 			});
-		};
-		function reSubmitForm(msg) {
-			if (!doing)
-				return;
-			count++;
-			$msg.html("(" + count + ")次自动提交中... " + (msg || ""));
-			timer = setTimeout(submitForm, freq || 50);
-		}
 
-		function stop(msg) {
-			doing = false;
-			$msg.html("(" + count + ")次 已停止");
-			$('#refreshButton').html("自动提交订单");
-			timer && clearTimeout(timer);
-			msg && alert(msg);
-		}
+			var userInfoUrl = "https://kyfw.12306.cn/otn/queryOrder/initNoComplete";
 
-		function reloadSeat() {
-			$("select[name$='_seat']").html('<option value="M" selected="">一等座</option><option value="O" selected="">二等座</option><option value="1">硬座</option><option value="3">硬卧</option><option value="4">软卧</option>');
-		}
+			var count = 1, freq = 1000, doing = false, timer, $msg = $("<div style='padding-left:470px;'></div>");
 
-		//初始化
+			function submitForm() {
+				timer = null;
+				var info;
 
-		if ($("#refreshButton").size() < 1) {
+				$.post("https://kyfw.12306.cn/otn/confirmPassenger/getPassengerDTOs", {
+					"REPEAT_SUBMIT_TOKEN" : SubmitToken,
+					"_json_att" : ""
+				}, function(data) {
 
-			// //重置后加载所有席别
-			// $("select[name$='_seat']").each(function(){this.blur(function(){
-			// alert(this.attr("id") + "blur");
-			// })});
-			////初始化所有席别
-			//$(".qr_box :checkbox[name^='checkbox']").each(function(){$(this).click(reloadSeat)});
-			//reloadSeat();
+					info = eval(data.data.normal_passengers)[0];
 
-			//日期可选
+					$.ajax({
+						url : "https://kyfw.12306.cn/otn/confirmPassenger/checkOrderInfo",
+						data : {
+							'cancel_flag' : '2',
+							'bed_level_order_num' : '000000000000000000000000000000',
+							'REPEAT_SUBMIT_TOKEN' : SubmitToken,
+							"randCode" : $("#randCode").val(),
+							'passengerTicketStr' : '3,0,' + '1,' + info.passenger_name + ',1,' + info.passenger_id_no + ',' + info.mobile_no + ',N',
+							'oldPassengerStr' : info.passenger_name + ',1,' + info.passenger_id_no + ',' + info.mobile_no + info.passenger_type + '_',
+							'tour_flag' : 'dc'
+						},
+						beforeSend : function(xhr) {
+							try {
+								xhr.setRequestHeader('X-Requested-With', {
+									toString : function() {
+										return '';
+									}
+								});
+								xhr.setRequestHeader('Cache-Control', 'max-age=0');
+								xhr.setRequestHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+							} catch(e) {
+							};
+						},
+						type : "POST",
+						timeout : 30000,
+						success : function(data) {
+							if (data.data.submitStatus) {
+								$.post("https://kyfw.12306.cn/otn/confirmPassenger/confirmSingleForQueue", {
+									'REPEAT_SUBMIT_TOKEN' : SubmitToken,
+									//"leftTicketStr" : "1015653007404405002630279503121015650165",
+									'purpose_codes' : '00',
+									'passengerTicketStr' : '3,0,' + '1,' + info.passenger_name + ',1,' + info.passenger_id_no + ',' + info.mobile_no + ',N',
+									'oldPassengerStr' : info.passenger_name + ',1,' + info.passenger_id_no + ',' + info.mobile_no + info.passenger_type + '_',
+								}, function(msg) {
+									alert(msg.data.submitStatus);
+									if (msg.data.submitStatus) {
+										var audio;
+										if (window.Audio) {
+											audio = new Audio("http://www.w3school.com.cn/i/song.ogg");
+											audio.loop = true;
+											audio.play();
+										}
+										setTimeout(function() {
+											if (confirm("车票预订成，去付款？")) {
+												window.location.replace(userInfoUrl);
+											} else {
+												if (audio && !audio.paused)
+													audio.pause();
+											}
+										}, 100);
+									} else {
+										stop(msg.data.errMsg || '未知错误');
+									}
+								})
+							} else {
+								var reTryMessage = ['用户过多', '验证码', '请不要重复提交', '没有足够的票!', '车次不开行'];
+								for (var i = 0; i < reTryMessage.length; i++) {
+									if (data.data.errMsg.indexOf(reTryMessage[i]) != -1) {
+										reSubmitForm(reTryMessage[i]);
+										return;
+									}
+								};
+								stop(data.data.errMsg || '未知错误');
+							}
+						},
+						error : function(msg) {
+							reSubmitForm("网络错误");
+						}
+					});
+				})
+			};
+			function reSubmitForm(msg) {
+				if (!doing)
+					return;
+				count++;
+				$msg.html("(" + count + ")次自动提交中... " + (msg || ""));
+				timer = setTimeout(submitForm, freq || 50);
+			}
 
-			//$("td.bluetext:first").html('<input type="text" name="orderRequest.train_date" value="' +$("td.bluetext:first").html()+'" id="startdatepicker" style="width: 150px;" class="input_20txt" onfocus="WdatePicker({firstDayOfWeek:1})" />');
+			function stop(msg) {
+				doing = false;
+				$msg.html("(" + count + ")次 已停止");
+				$('#refreshButton').html("自动提交订单");
+				timer && clearTimeout(timer);
+				if (msg != '')
+					alert(msg);
+			}
 
-			$(".tj_btn").append($("<a style='padding: 5px 10px; background: #2CC03E;border-color: #259A33;border-right-color: #2CC03E;border-bottom-color:#2CC03E;color: white;border-radius: 5px;text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.2);'></a>").attr("id", "refreshButton").html("自动提交订单").click(function() {
-				//alert('开始自动提交订单，请点确定后耐心等待！');
-				if (this.innerHTML.indexOf("自动提交订单") == -1) {
-					//doing
-					stop();
-				} else {
-					if (window.submit_form_check && !window.submit_form_check("confirmPassenger")) {
-						return;
+			if ($("#refreshButton").size() < 1) {
+
+				$(".lay-btn").append($("<a style='padding: 5px 10px; background: #2CC03E;border-color: #259A33;border-right-color: #2CC03E;border-bottom-color:#2CC03E;color: white;border-radius: 5px;text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.2);'></a>").attr("id", "refreshButton").html("自动提交订单").click(function() {
+					//alert('开始自动提交订单，请点确定后耐心等待！');
+					if (this.innerHTML.indexOf("自动提交订单") == -1) {
+						doing = false;
+						stop();
+					} else {
+						doing = true;
+						this.innerHTML = "停止自动提交";
+						reSubmitForm();
 					}
-					count = 0;
-					doing = true;
-					this.innerHTML = "停止自动提交";
-					reSubmitForm();
-				}
-				return false;
-			}));
-			$(".tj_btn").append("自动提交频率：").append($("<select id='freq'><option value='50' >频繁</option><option value='500' selected='' >正常</option><option value='2000' >缓慢</option></select>").change(function() {
-				freq = parseInt($(this).val());
-			})).append($msg);
-			//alert('如果使用自动提交订单功能，请在确认订单正确无误后，再点击自动提交按钮！');
-		}
-	};
+					return false;
+				}));
+				$(".lay-btn").append("自动提交频率：").append($("<select id='freq'><option value='50' >频繁</option><option value='500' selected='' >正常</option><option value='2000' >缓慢</option></select>").change(function() {
+					freq = parseInt($(this).val());
+				})).append($msg);
+				//alert('如果使用自动提交订单功能，请在确认订单正确无误后，再点击自动提交按钮！');
+			}
+		}, 500);
+	});
 
 }, true);
