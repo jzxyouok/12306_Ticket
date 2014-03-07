@@ -164,8 +164,8 @@ withjQuery(function($, window) {
 					if ($t.length) {
 						setTimeout(function() {
 							$t = $t.find('#loginForm');
-							$t.find("input").eq(0).val('401334029@qq.com');
-							$t.find("input").eq(1).val('sks_168168');
+							$t.find("input").eq(0).val('*****@qq.com');
+							$t.find("input").eq(1).val('********');
 							$('#randCode').keyup(function(e) {
 								var str = $.trim(e.target.value);
 								if (str.length == 4)
@@ -437,7 +437,6 @@ withjQuery(function($, window) {
 			if ($("#refreshButton").size() < 1) {
 
 				$(".lay-btn").append($("<a style='padding: 5px 10px; background: #2CC03E;border-color: #259A33;border-right-color: #2CC03E;border-bottom-color:#2CC03E;color: white;border-radius: 5px;text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.2);'></a>").attr("id", "refreshButton").html("自动提交订单").click(function() {
-					//alert('开始自动提交订单，请点确定后耐心等待！');
 					if (this.innerHTML.indexOf("自动提交订单") == -1) {
 						doing = false;
 						stop();
@@ -451,7 +450,6 @@ withjQuery(function($, window) {
 				$(".lay-btn").append("自动提交频率：").append($("<select id='freq'><option value='50' >频繁</option><option value='500' selected='' >正常</option><option value='2000' >缓慢</option></select>").change(function() {
 					freq = parseInt($(this).val());
 				})).append($msg);
-				//alert('如果使用自动提交订单功能，请在确认订单正确无误后，再点击自动提交按钮！');
 			}
 		}, 500);
 	});
